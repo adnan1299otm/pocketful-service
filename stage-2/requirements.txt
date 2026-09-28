@@ -1,0 +1,4 @@
+Flask==2.2.5
+SQLAlchemy==1.4.46
+psycopg2-binary==2.9.5
+alembic==1.7.7
