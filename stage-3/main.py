@@ -1,4 +1,4 @@
-"""Pocketful Wallet Service - Stage 2 (Browser UI & Authorizations)"""
+"""Pocketful Wallet Service - Stage 3 (Statements & Payment Corrections)"""
 import re
 import os
 import json
@@ -8,7 +8,7 @@ from typing import Any, Optional, List, Dict, Tuple
 from flask import Flask, request, jsonify, make_response, redirect, render_template_string
 
 app = Flask(__name__)
-app.secret_key = 'pocketful-stage2-secret-key'
+app.secret_key = 'pocketful-stage3-secret-key'
 
 # In-Memory State Store
 
@@ -693,6 +693,263 @@ def get_activity():
     return jsonify({"payments": paged_v, "has_more": has_more_v}), 200
 
 
+# Payment Corrections  (Stage 3)
+
+@app.route("/payments/<payment_id>/corrections", methods=["POST"])
+def create_correction(payment_id):
+    user = get_current_user_from_req()
+    if not user:
+        return error_json("unauthorized", "Authentication required", 401)
+
+    key = request.headers.get("Idempotency-Key")
+    if not key:
+        return error_json("validation_failed", "Idempotency-Key header is required", 422)
+
+    # Find payment
+    payment = None
+    for p in store.payments:
+        if p["payment_id"] == payment_id:
+            payment = p
+            break
+    if payment is None:
+        return error_json("not_found", "Payment not found", 404)
+
+    # Only original sender can correct
+    if payment["from_handle"] != user["handle"]:
+        return error_json("forbidden", "Only the original sender can correct this payment", 403)
+
+    # Reject linked payments (settlement members, captures)
+    if payment.get("settlement_id") or payment.get("refund_of"):
+        return error_json("linked_payment_immutable", "Cannot correct a linked payment", 422)
+
+    idem_path = f"/payments/{payment_id}/corrections"
+    idem_tuple = (key, idem_path)
+    if idem_tuple in store.idempotency:
+        stored_status, stored_body = store.idempotency[idem_tuple]
+        return jsonify(stored_body), stored_status
+
+    data = request.get_json(silent=True) or {}
+    expected_revision = data.get("expected_revision")
+    new_amount = data.get("amount")
+    effective_at_raw = data.get("effective_at")
+    reason = data.get("reason")
+
+    if expected_revision is None or new_amount is None or not effective_at_raw or not reason:
+        return error_json("validation_failed",
+                          "All fields required: expected_revision, amount, effective_at, reason", 422)
+    if not isinstance(expected_revision, int) or expected_revision < 1:
+        return error_json("validation_failed", "expected_revision must be a positive integer", 422)
+    if not isinstance(new_amount, int) or new_amount < 0 or new_amount > 1_000_000_000:
+        return error_json("validation_failed", "amount must be an integer 0..1000000000", 422)
+    if not isinstance(reason, str) or len(reason) < 1 or len(reason) > 200:
+        return error_json("validation_failed", "reason must be 1..200 characters", 422)
+
+    effective_at_dt = parse_rfc3339(effective_at_raw)
+    if effective_at_dt is None:
+        return error_json("validation_failed",
+                          "effective_at must be an RFC 3339 instant with timezone offset", 422)
+    now = datetime.datetime.now(datetime.timezone.utc)
+    if effective_at_dt > now:
+        return error_json("validation_failed", "effective_at must not be later than now", 422)
+
+    revs = store.revisions.get(payment_id, [])
+    current_revision = len(revs)
+
+    # Stale revision check
+    if expected_revision != current_revision:
+        return error_json("stale_revision",
+                          f"Expected revision {expected_revision} but current is {current_revision}", 409)
+
+    old_amount = revs[-1]["amount"] if revs else 0
+    delta = new_amount - old_amount  # positive = sender pays more
+
+    sender_uid = store.users_by_handle.get(payment["from_handle"])
+    receiver_uid = store.users_by_handle.get(payment["to_handle"])
+    if not sender_uid or not receiver_uid:
+        return error_json("not_found", "Payment parties not found", 404)
+
+    sender = store.users[sender_uid]
+    receiver = store.users[receiver_uid]
+
+    # Check current funds before historical check
+    if delta > 0:
+        sender_avail = max(0, sender["total"] - sender["held"])
+        if sender_avail < delta:
+            return error_json("insufficient_funds", "Sender has insufficient available funds", 409)
+    elif delta < 0:
+        receiver_avail = max(0, receiver["total"] - receiver["held"])
+        if receiver_avail < abs(delta):
+            return error_json("insufficient_funds", "Receiver has insufficient available funds", 409)
+
+    # Apply correction to current balances
+    sender["total"] -= delta
+    receiver["total"] += delta
+
+    # Add the new revision (temporarily, for historical overdraft check)
+    new_recorded_at = now.isoformat()
+    new_revision_num = current_revision + 1
+    new_rev = {
+        "payment_id": payment_id,
+        "revision": new_revision_num,
+        "amount": new_amount,
+        "effective_at": effective_at_raw,
+        "recorded_at": new_recorded_at,
+        "reason": reason,
+    }
+    store.revisions[payment_id].append(new_rev)
+
+    # Historical overdraft check: compute balance at each effective-time boundary
+    all_effective_times: set = set()
+    for p in store.payments:
+        for rv in store.revisions.get(p["payment_id"], []):
+            t = parse_rfc3339(rv["effective_at"])
+            if t:
+                all_effective_times.add(t)
+    all_effective_times.add(effective_at_dt)
+
+    overdraft = False
+    for t_dt in sorted(all_effective_times):
+        for uid, u in store.users.items():
+            bal = store.get_balance_at(u["handle"], as_of_dt=t_dt)
+            if bal < 0:
+                overdraft = True
+                break
+        if overdraft:
+            break
+
+    if overdraft:
+        # Rollback
+        store.revisions[payment_id].pop()
+        sender["total"] += delta
+        receiver["total"] -= delta
+        return error_json("historical_overdraft",
+                          "Correction would cause a historical overdraft", 409)
+
+    result = {
+        "payment_id": payment_id,
+        "revision": new_revision_num,
+        "amount": new_amount,
+        "effective_at": effective_at_raw,
+        "recorded_at": new_recorded_at,
+        "reason": reason,
+    }
+    store.idempotency[idem_tuple] = (201, result)
+    return jsonify(result), 201
+
+
+@app.route("/payments/<payment_id>/revisions", methods=["GET"])
+def get_payment_revisions(payment_id):
+    user = get_current_user_from_req()
+    if not user:
+        return error_json("unauthorized", "Authentication required", 401)
+
+    payment = None
+    for p in store.payments:
+        if p["payment_id"] == payment_id:
+            payment = p
+            break
+
+    if payment is None:
+        return error_json("not_found", "Payment not found", 404)
+
+    # Only parties can read revisions; third party gets 404 even for public payments
+    if payment["from_handle"] != user["handle"] and payment["to_handle"] != user["handle"]:
+        return error_json("not_found", "Payment not found", 404)
+
+    revs = store.revisions.get(payment_id, [])
+    return jsonify({"revisions": revs}), 200
+
+
+# Statement  (Stage 3) - with snapshot pagination
+
+@app.route("/statement", methods=["GET"])
+def get_statement():
+    user = get_current_user_from_req()
+    if not user:
+        return error_json("unauthorized", "Authentication required", 401)
+
+    snapshot_token = request.args.get("snapshot")
+
+    if snapshot_token:
+        # Paging a frozen snapshot - only limit and offset allowed
+        if request.args.get("from") or request.args.get("to") or request.args.get("known_at"):
+            return error_json("validation_failed",
+                              "Cannot use from, to, or known_at with snapshot", 422)
+        snap = store.snapshots.get(snapshot_token)
+        if snap is None or snap["uid"] != user["id"] or snap.get("reset_time") != store._reset_time:
+            return error_json("not_found", "Snapshot not found or expired", 404)
+
+        limit = request.args.get("limit", type=int, default=50)
+        offset = request.args.get("offset", type=int, default=0)
+        all_entries = snap["entries"]
+        page = all_entries[offset:offset + limit]
+        has_more = (offset + limit) < len(all_entries)
+        return jsonify({
+            "opening_balance": snap["opening_balance"],
+            "entries": page,
+            "closing_balance": snap["closing_balance"],
+            "has_more": has_more,
+            "snapshot": snapshot_token,
+        }), 200
+
+    # Normal statement query
+    from_raw = request.args.get("from")
+    to_raw = request.args.get("to")
+    known_at_raw = request.args.get("known_at")
+
+    from_dt = None
+    to_dt = None
+    known_at_dt = None
+
+    if from_raw is not None:
+        from_dt = parse_rfc3339(from_raw)
+        if from_dt is None:
+            return error_json("validation_failed",
+                              "from must be an RFC 3339 instant with timezone offset", 422)
+    if to_raw is not None:
+        to_dt = parse_rfc3339(to_raw)
+        if to_dt is None:
+            return error_json("validation_failed",
+                              "to must be an RFC 3339 instant with timezone offset", 422)
+    if known_at_raw is not None:
+        known_at_dt = parse_rfc3339(known_at_raw)
+        if known_at_dt is None:
+            return error_json("validation_failed",
+                              "known_at must be an RFC 3339 instant with timezone offset", 422)
+
+    limit = request.args.get("limit", type=int, default=50)
+    offset = request.args.get("offset", type=int, default=0)
+
+    all_entries, opening_balance, closing_balance = store.build_statement(
+        user["handle"], from_dt, to_dt, known_at_dt
+    )
+
+    # Create immutable snapshot
+    token = f"snap_{uuid.uuid4().hex}"
+    store.snapshots[token] = {
+        "uid": user["id"],
+        "entries": all_entries,
+        "opening_balance": opening_balance,
+        "closing_balance": closing_balance,
+        "reset_time": store._reset_time,
+    }
+
+    page = all_entries[offset:offset + limit]
+    has_more = (offset + limit) < len(all_entries)
+
+    resp: dict = {
+        "opening_balance": opening_balance,
+        "entries": page,
+        "closing_balance": closing_balance,
+        "has_more": has_more,
+        "snapshot": token,
+    }
+    if known_at_raw is not None:
+        resp["known_at"] = known_at_raw
+
+    return jsonify(resp), 200
+
+
 # Requests Endpoints
 
 @app.route("/requests", methods=["GET", "POST"])
@@ -1349,7 +1606,7 @@ def page_split():
 
 @app.route("/health", methods=["GET"])
 def health():
-    return jsonify({"status": "ok", "stage": 2}), 200
+    return jsonify({"status": "ok", "stage": 3}), 200
 
 
 # HTML Templates (carried from stage-2)

@@ -1,11 +1,11 @@
-# Build and Run Instructions
+# Pocketful Service - Stage 2
 
-### Building the Docker Image
+## Build
 ```bash
-docker build -t my-backend-service .
+docker build -t pocketful-service:stage-2 .
 ```
 
-### Running the Docker Container
+## Run
 ```bash
-docker run -p 8080:$PORT -e PORT=8080 my-backend-service
+docker run -p 8080:8080 -e PORT=8080 pocketful-service:stage-2
 ```

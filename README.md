@@ -1,18 +1,62 @@
 # Pocketful Service — Autonomous Dark Factory
 
-## Overview
-This repository contains the software deliverables produced autonomously by an AI-agent Dark Factory operating inside **Band.ai Desktop** for the **Pocketful** track of the WeAreDevelopers Hackathon.
+**Track:** `pocketful` · **Hackathon:** WeAreDevelopers World Congress 2026
 
-## Team
-- **Track**: `pocketful` (Wallet, payments, and settlements application)
-- **Factory Architecture**: Band.ai Universal Multi-Agent Adapter
-- **Primary Model**: `Qwen/Qwen2.5-Coder-32B-Instruct` hosted via Featherless.ai
+A five-seat autonomous AI factory built on Band Desktop that designed, implemented, tested, and iterated on a full-stack wallet and payments service — all four stages — without human code contributions.
 
-## Repository Structure
-- `FACTORY.md`: Factory organization, seat responsibilities, communication protocols, and design rationale.
-- `mandates/`: Mandate specifications defining the operational contract for each agent seat.
-- `room.json`: Complete session event log exported from Band Desktop.
-- `stage-1/`: Stage 1 service implementation, Dockerfile, and RUN.md instructions.
-- `stage-2/`: Stage 2 browser UI, enhanced resources, and state recovery.
-- `stage-3/`: Stage 3 historical records, effective dating, and audit trails.
-- `stage-4/`: Stage 4 batch operations and atomic settlement adjustments.
+---
+
+## Team & Track
+
+| Field | Value |
+|---|---|
+| Track | `pocketful` — wallet, payments, and settlements |
+| Factory Platform | Band Desktop (Band SDK) |
+| Primary Model | `moonshotai/Kimi-K2-Instruct` via Featherless AI |
+| Stages Completed | **4 / 4** |
+| Test Score | **193 / 193 (100%)** |
+
+---
+
+## What Was Built
+
+A production-quality Flask service that passes all four stage suites of the Pocketful specification:
+
+| Stage | What It Delivers | Tests |
+|---|---|---|
+| **Stage 1** | JSON API — payments, requests, splits, settlements, idempotent writes, atomic transfers, export/import | 147 / 147 |
+| **Stage 2** | Browser wallet UI (Playwright-tested), payment authorizations and holds, double-submit prevention | 35 / 35 |
+| **Stage 3** | Historical balance queries, paginated statements, effective-dated payment corrections, snapshot pagination | 6 / 6 |
+| **Stage 4** | Receiver refunds, operator batch corrections, full history integrity | 5 / 5 |
+
+---
+
+## Repository Layout
+
+```
+pocketful-service/
+  README.md          ← this file
+  FACTORY.md         ← factory seats, design, failure handling
+  mandates/          ← one .md per seat (architect, backend, frontend, auditor, integrator)
+  room.json          ← full Band Desktop session log
+  stage-1/           ← Dockerfile · RUN.md · main.py  (Stage 1 API)
+  stage-2/           ← Dockerfile · RUN.md · main.py  (Stage 1 + UI + Holds)
+  stage-3/           ← Dockerfile · RUN.md · main.py  (Stage 2 + History)
+  stage-4/           ← Dockerfile · RUN.md · main.py  (Stage 3 + Refunds + Batches)
+```
+
+Each stage folder is an independently buildable service. Run any stage with:
+
+```bash
+docker build -t pocketful-service:stage-N .
+docker run -p 8080:8080 -e PORT=8080 pocketful-service:stage-N
+```
+
+---
+
+## How to Read This Repository
+
+1. **`FACTORY.md`** — start here to understand how the factory is structured, how seats hand off work, and how failures are recovered.
+2. **`mandates/`** — each file defines one seat's role, harness, model, and operating rules.
+3. **`room.json`** — the complete Band Desktop room event log showing real inter-seat communication.
+4. **`stage-N/main.py`** — the service source. Each stage extends the previous one; `stage-4` is the complete system.

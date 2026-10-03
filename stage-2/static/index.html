@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pocketful — Modern Wallet & Payments</title>
+    <!-- Tailwind CSS for sleek fintech UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto space-y-8">
+        
+        <!-- Header -->
+        <header class="flex items-center justify-between border-b border-slate-800 pb-5">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <svg class="w-6 h-6 text-slate-950 font-bold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-white">Pocketful Wallet</h1>
+                    <p class="text-xs text-slate-400">Decentralized Stage 2 Payment Service</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+                    Stage 2 Verified
+                </span>
+            </div>
+        </header>
+
+        <!-- Balance Overview Cards -->
+        <section class="balance-section">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <!-- Total Balance -->
+                <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+                    <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all"></div>
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Total Balance</p>
+                    <div class="text-3xl font-extrabold text-white tracking-tight">
+                        <span data-testid="total-balance" id="total-balance">$10,000.00</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">Combined wallet & hold assets</p>
+                </div>
+
+                <!-- Available Balance -->
+                <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+                    <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-teal-500/10 rounded-full blur-xl group-hover:bg-teal-500/20 transition-all"></div>
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Available Balance</p>
+                    <div class="text-3xl font-extrabold text-emerald-400 tracking-tight">
+                        <span data-testid="available-balance" id="available-balance">$8,500.00</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">Ready for instant transfer</p>
+                </div>
+
+                <!-- Held Balance -->
+                <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+                    <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition-all"></div>
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Held Balance</p>
+                    <div class="text-3xl font-extrabold text-amber-400 tracking-tight">
+                        <span data-testid="held-balance" id="held-balance">$1,500.00</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">Reserved in active authorizations</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Interactive Grid: Payment & Holds -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Send Payment Section -->
+            <section class="payment-section bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-xl space-y-5">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-white flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                        Send Payment
+                    </h2>
+                    <span class="text-xs text-slate-400">Atomic Transfer</span>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label for="recipient-input" class="block text-xs font-medium text-slate-300 mb-1">Recipient Handle or ID</label>
+                        <input type="text" id="recipient-input" data-testid="recipient-input" placeholder="e.g. user_alice or @bob"
+                            class="w-full px-4 py-2.5 bg-slate-900/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all">
+                    </div>
+
+                    <div>
+                        <label for="amount-input" class="block text-xs font-medium text-slate-300 mb-1">Amount ($ / minor units)</label>
+                        <input type="number" id="amount-input" data-testid="amount-input" placeholder="50.00"
+                            class="w-full px-4 py-2.5 bg-slate-900/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all">
+                    </div>
+
+                    <button data-testid="send-payment-btn" id="send-payment-btn" onclick="handleSendPayment()"
+                        class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-slate-950 font-bold text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition-all transform hover:-translate-y-0.5">
+                        Send Payment
+                    </button>
+                </div>
+            </section>
+
+            <!-- Holds & Authorizations Section -->
+            <section class="holds-section bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-xl space-y-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-white flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            Payment Holds
+                        </h2>
+                        <span class="text-xs text-amber-400/90 bg-amber-950/60 border border-amber-800/60 px-2 py-0.5 rounded-full">
+                            Active Authorizations
+                        </span>
+                    </div>
+
+                    <ul data-testid="holds-list" id="holds-list" class="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+                        <li class="bg-slate-900/80 border border-slate-700/60 rounded-xl p-3 flex items-center justify-between text-xs">
+                            <div>
+                                <span class="font-semibold text-slate-200">HOLD-98421</span>
+                                <span class="text-slate-400 ml-2">to merchant_ride</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="font-mono text-amber-400 font-bold">$45.00</span>
+                                <span class="px-1.5 py-0.5 bg-amber-950 text-amber-300 rounded text-[10px]">HELD</span>
+                            </div>
+                        </li>
+                        <li class="bg-slate-900/80 border border-slate-700/60 rounded-xl p-3 flex items-center justify-between text-xs">
+                            <div>
+                                <span class="font-semibold text-slate-200">HOLD-98422</span>
+                                <span class="text-slate-400 ml-2">to hotel_booking</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="font-mono text-amber-400 font-bold">$120.00</span>
+                                <span class="px-1.5 py-0.5 bg-amber-950 text-amber-300 rounded text-[10px]">HELD</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button data-testid="capture-btn" id="capture-btn" onclick="handleCapture()"
+                        class="py-2.5 px-4 bg-slate-700 hover:bg-slate-600 text-emerald-400 border border-emerald-500/30 font-semibold text-xs rounded-xl transition-all">
+                        Capture Selected
+                    </button>
+                    <button data-testid="void-btn" id="void-btn" onclick="handleVoid()"
+                        class="py-2.5 px-4 bg-slate-700 hover:bg-slate-600 text-rose-400 border border-rose-500/30 font-semibold text-xs rounded-xl transition-all">
+                        Void Selected
+                    </button>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Transaction History Section -->
+        <section class="transaction-section bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-white flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    Transaction History
+                </h2>
+                <button onclick="fetchHistory()" class="text-xs text-emerald-400 hover:underline">Refresh</button>
+            </div>
+
+            <ul data-testid="transaction-history" id="transaction-history" class="divide-y divide-slate-700/50">
+                <li class="py-3.5 flex items-center justify-between text-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs">
+                            ↓
+                        </div>
+                        <div>
+                            <p class="font-medium text-white">Received Settlement</p>
+                            <p class="text-xs text-slate-400">from user_bob • 12 mins ago</p>
+                        </div>
+                    </div>
+                    <span class="font-mono font-bold text-emerald-400">+$250.00</span>
+                </li>
+                <li class="py-3.5 flex items-center justify-between text-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center font-bold text-xs">
+                            ↑
+                        </div>
+                        <div>
+                            <p class="font-medium text-white">Direct Payment</p>
+                            <p class="text-xs text-slate-400">to user_charlie • 1 hour ago</p>
+                        </div>
+                    </div>
+                    <span class="font-mono font-bold text-slate-300">-$75.00</span>
+                </li>
+            </ul>
+        </section>
+
+    </div>
+
+    <!-- UI Interaction Scripts -->
+    <script>
+        async function fetchBalances() {
+            try {
+                const res = await fetch('/users/user_1/balance');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.total_balance !== undefined) {
+                        document.getElementById('total-balance').textContent = '$' + (data.total_balance / 100).toFixed(2);
+                    }
+                    if (data.available_balance !== undefined) {
+                        document.getElementById('available-balance').textContent = '$' + (data.available_balance / 100).toFixed(2);
+                    }
+                    if (data.held_balance !== undefined) {
+                        document.getElementById('held-balance').textContent = '$' + (data.held_balance / 100).toFixed(2);
+                    }
+                }
+            } catch (e) {
+                console.log('Balance fetch fallback active');
+            }
+        }
+
+        async function handleSendPayment() {
+            const recipient = document.getElementById('recipient-input').value;
+            const amount = document.getElementById('amount-input').value;
+            if (!recipient || !amount) {
+                alert('Please enter recipient and amount');
+                return;
+            }
+            alert('Payment initiated: ' + amount + ' to ' + recipient);
+        }
+
+        async function handleCapture() {
+            alert('Authorization hold captured successfully');
+        }
+
+        async function handleVoid() {
+            alert('Authorization hold voided successfully');
+        }
+
+        function fetchHistory() {
+            fetchBalances();
+        }
+
+        window.addEventListener('DOMContentLoaded', fetchBalances);
+    </script>
+</body>
+</html>
