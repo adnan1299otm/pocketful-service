@@ -4,13 +4,15 @@
 
 Five autonomous agent seats collaborate inside a single Band Desktop room. Each seat has one mandate file named after it.
 
+Two models were used across the factory. `Qwen/Qwen2.5-Coder-32B-Instruct` handled the majority of code generation and implementation work. `moonshotai/Kimi-K2-Instruct` contributed to planning and architectural decisions.
+
 | Seat | Role | Harness | Model |
 |---|---|---|---|
-| `architect` | System planning, data contracts, stage gates | Custom (Band SDK) | `moonshotai/Kimi-K2-Instruct` |
-| `backend` | Persistence layer, business logic, API endpoints | Custom (Band SDK) | `moonshotai/Kimi-K2-Instruct` |
-| `frontend` | Browser screens, `data-testid` attributes, JS behaviour | Custom (Band SDK) | `moonshotai/Kimi-K2-Instruct` |
-| `auditor` | Test execution, gate reporting, evidence collection | Custom (Band SDK) | `moonshotai/Kimi-K2-Instruct` |
-| `integrator` | Root-cause diagnosis, targeted bug fixes, re-audit | Custom (Band SDK) | `moonshotai/Kimi-K2-Instruct` |
+| `architect` | System planning, data contracts, stage gates | Custom (Band SDK) | `Qwen/Qwen2.5-Coder-32B-Instruct` · `moonshotai/Kimi-K2-Instruct` |
+| `backend` | Persistence layer, business logic, API endpoints | Custom (Band SDK) | `Qwen/Qwen2.5-Coder-32B-Instruct` |
+| `frontend` | Browser screens, `data-testid` attributes, JS behaviour | Custom (Band SDK) | `Qwen/Qwen2.5-Coder-32B-Instruct` |
+| `auditor` | Test execution, gate reporting, evidence collection | Custom (Band SDK) | `Qwen/Qwen2.5-Coder-32B-Instruct` |
+| `integrator` | Root-cause diagnosis, targeted bug fixes, re-audit | Custom (Band SDK) | `Qwen/Qwen2.5-Coder-32B-Instruct` |
 
 ---
 

@@ -12,7 +12,7 @@ A five-seat autonomous AI factory built on Band Desktop that designed, implement
 |---|---|
 | Track | `pocketful` — wallet, payments, and settlements |
 | Factory Platform | Band Desktop (Band SDK) |
-| Primary Model | `moonshotai/Kimi-K2-Instruct` via Featherless AI |
+| Models | `Qwen/Qwen2.5-Coder-32B-Instruct` (primary code generation) · `moonshotai/Kimi-K2-Instruct` (planning & architecture) via Featherless AI |
 | Stages Completed | **4 / 4** |
 | Test Score | **193 / 193 (100%)** |
 
