@@ -54,6 +54,29 @@ docker run -p 8080:8080 -e PORT=8080 pocketful-service:stage-N
 
 ---
 
+## Try It Live
+
+The Stage 4 service is deployed and running:
+
+**Demo URL:** `https://pocketful-service.onrender.com`
+
+> Note: Render free tier sleeps after 15 minutes of inactivity. First request may take ~30 seconds to wake up.
+
+Three test accounts are pre-seeded on every fresh start:
+
+| Email | Password | Starting Balance |
+|---|---|---|
+| `ada@example.com` | `correct horse` | 100.00 EUR |
+| `bob@example.com` | `correct horse` | 25.00 EUR |
+| `cy@example.com` | `correct horse` | 5.00 EUR |
+
+Try the full flow:
+1. Sign in as **Ada** → split a bill with `bob,cy` on the Split page
+2. Sign out → sign in as **Bob** or **Cy** → pay the incoming request
+3. Sign back in as **Ada** → see the balance updated
+
+---
+
 ## How to Read This Repository
 
 1. **`FACTORY.md`** — start here to understand how the factory is structured, how seats hand off work, and how failures are recovered.
